@@ -1,0 +1,307 @@
+
+> frontend@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 11 errors:
+./src/app/chat/page.tsx:8:1
+Module not found: Can't resolve '@/components/ui/avatar'
+   6 | import { Button } from "@/components/ui/button"
+   7 | import { ScrollArea } from "@/components/ui/scroll-area"
+>  8 | import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { Send, Phone, User, Clock, Check, CheckCheck } from "lucide-react"
+  10 | import axios from "axios"
+  11 |
+
+Import map: aliased to relative './src/components/ui/avatar' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/chat/page.tsx [Client Component Browser]
+    ./src/app/chat/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/chat/page.tsx [Client Component SSR]
+    ./src/app/chat/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:9:1
+Module not found: Can't resolve '@/components/ui/badge'
+   7 | import { Label } from "@/components/ui/label"
+   8 | import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+>  9 | import { Badge } from "@/components/ui/badge"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { Building2, Plus, Users, Key, Phone, Save, Loader2 } from "lucide-react"
+  11 | import axios from "axios"
+  12 |
+
+Import map: aliased to relative './src/components/ui/badge' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/button'
+  3 | import { useState, useEffect } from "react"
+  4 | import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+> 5 | import { Button } from "@/components/ui/button"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 | import { Input } from "@/components/ui/input"
+  7 | import { Label } from "@/components/ui/label"
+  8 | import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+Import map: aliased to relative './src/components/ui/button' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/chat/page.tsx:6:1
+Module not found: Can't resolve '@/components/ui/button'
+  4 | import { Card } from "@/components/ui/card"
+  5 | import { Input } from "@/components/ui/input"
+> 6 | import { Button } from "@/components/ui/button"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 | import { ScrollArea } from "@/components/ui/scroll-area"
+  8 | import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+  9 | import { Send, Phone, User, Clock, Check, CheckCheck } from "lucide-react"
+
+Import map: aliased to relative './src/components/ui/button' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/chat/page.tsx [Client Component Browser]
+    ./src/app/chat/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/chat/page.tsx [Client Component SSR]
+    ./src/app/chat/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+  2 |
+  3 | import { useState, useEffect } from "react"
+> 4 | import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { Button } from "@/components/ui/button"
+  6 | import { Input } from "@/components/ui/input"
+  7 | import { Label } from "@/components/ui/label"
+
+Import map: aliased to relative './src/components/ui/card' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/chat/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+  2 |
+  3 | import { useState, useEffect, useRef } from "react"
+> 4 | import { Card } from "@/components/ui/card"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { Input } from "@/components/ui/input"
+  6 | import { Button } from "@/components/ui/button"
+  7 | import { ScrollArea } from "@/components/ui/scroll-area"
+
+Import map: aliased to relative './src/components/ui/card' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/chat/page.tsx [Client Component Browser]
+    ./src/app/chat/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/chat/page.tsx [Client Component SSR]
+    ./src/app/chat/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:6:1
+Module not found: Can't resolve '@/components/ui/input'
+  4 | import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+  5 | import { Button } from "@/components/ui/button"
+> 6 | import { Input } from "@/components/ui/input"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 | import { Label } from "@/components/ui/label"
+  8 | import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+  9 | import { Badge } from "@/components/ui/badge"
+
+Import map: aliased to relative './src/components/ui/input' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/chat/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/input'
+  3 | import { useState, useEffect, useRef } from "react"
+  4 | import { Card } from "@/components/ui/card"
+> 5 | import { Input } from "@/components/ui/input"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 | import { Button } from "@/components/ui/button"
+  7 | import { ScrollArea } from "@/components/ui/scroll-area"
+  8 | import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+
+Import map: aliased to relative './src/components/ui/input' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/chat/page.tsx [Client Component Browser]
+    ./src/app/chat/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/chat/page.tsx [Client Component SSR]
+    ./src/app/chat/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:7:1
+Module not found: Can't resolve '@/components/ui/label'
+   5 | import { Button } from "@/components/ui/button"
+   6 | import { Input } from "@/components/ui/input"
+>  7 | import { Label } from "@/components/ui/label"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+   9 | import { Badge } from "@/components/ui/badge"
+  10 | import { Building2, Plus, Users, Key, Phone, Save, Loader2 } from "lucide-react"
+
+Import map: aliased to relative './src/components/ui/label' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/chat/page.tsx:7:1
+Module not found: Can't resolve '@/components/ui/scroll-area'
+   5 | import { Input } from "@/components/ui/input"
+   6 | import { Button } from "@/components/ui/button"
+>  7 | import { ScrollArea } from "@/components/ui/scroll-area"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+   9 | import { Send, Phone, User, Clock, Check, CheckCheck } from "lucide-react"
+  10 | import axios from "axios"
+
+Import map: aliased to relative './src/components/ui/scroll-area' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/chat/page.tsx [Client Component Browser]
+    ./src/app/chat/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/chat/page.tsx [Client Component SSR]
+    ./src/app/chat/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/admin/page.tsx:8:1
+Module not found: Can't resolve '@/components/ui/table'
+   6 | import { Input } from "@/components/ui/input"
+   7 | import { Label } from "@/components/ui/label"
+>  8 | import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { Badge } from "@/components/ui/badge"
+  10 | import { Building2, Plus, Users, Key, Phone, Save, Loader2 } from "lucide-react"
+  11 | import axios from "axios"
+
+Import map: aliased to relative './src/components/ui/table' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/admin/page.tsx [Client Component Browser]
+    ./src/app/admin/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/admin/page.tsx [Client Component SSR]
+    ./src/app/admin/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./src/app/chat/page.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:9:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/chat/page.tsx:6:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/chat/page.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:6:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/chat/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:7:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/chat/page.tsx:7:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/admin/page.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
