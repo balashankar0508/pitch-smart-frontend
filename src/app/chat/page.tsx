@@ -40,6 +40,9 @@ interface Message {
     status?: string;
     mediaUrl?: string;
     type?: string;
+    waMessageId?: string;
+    rawMetadata?: string;
+    replyContextId?: string;
 }
 
 export default function ChatDashboard() {
@@ -55,10 +58,20 @@ export default function ChatDashboard() {
     const [sending, setSending] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [showScrollButton, setShowScrollButton] = useState(false)
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const isFirstLoad = useRef(true)
+
+    const cancelReply = () => setReplyingTo(null)
+
+    const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
+    const handleCopy = (msg: Message) => {
+        navigator.clipboard.writeText(msg.messageText || "")
+        setCopiedMessageId(msg.id)
+        setTimeout(() => setCopiedMessageId(null), 2000)
+    }
 
     // Fetch all leads for this tenant
     useEffect(() => {
@@ -151,23 +164,26 @@ export default function ChatDashboard() {
         }
     }
 
-    const handleSendMessage = async (e?: React.FormEvent, mediaUrl?: string, mediaType?: string) => {
+    const handleSendMessage = async (e?: React.FormEvent, mediaUrl?: string, mediaType?: string, textOverride?: string) => {
         if (e) e.preventDefault()
-        if (!newMessage.trim() && !mediaUrl || !activeLead) return
+        const messageText = textOverride !== undefined ? textOverride : newMessage
+        if (!messageText.trim() && !mediaUrl || !activeLead) return
 
-        const messageText = newMessage
-        setNewMessage("")
+        if (textOverride === undefined) {
+            setNewMessage("")
+        }
         setSending(true)
 
         // Optimistically add message
-        const tempMsg = {
+        const tempMsg: Message = {
             id: Date.now(),
             direction: "OUTBOUND",
             messageText: messageText,
             mediaUrl: mediaUrl,
             type: mediaType || 'text',
             sentAt: new Date().toISOString(),
-            status: "SENDING"
+            status: "SENDING",
+            replyContextId: replyingTo?.waMessageId
         }
         setMessages(prev => [...prev, tempMsg])
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100)
@@ -176,8 +192,10 @@ export default function ChatDashboard() {
             await axios.post(`http://localhost:8080/api/chat/${activeLead.id}/send`, {
                 message: messageText,
                 mediaUrl: mediaUrl,
-                type: mediaType || 'text'
+                type: mediaType || 'text',
+                replyMessageId: replyingTo?.waMessageId
             })
+            setReplyingTo(null)
             fetchMessages(activeLead.id) // Get real message from server
         } catch (e) {
             console.error("Failed to send message", e)
@@ -407,11 +425,37 @@ export default function ChatDashboard() {
                                         </div>
                                     </div>
                                     {dateMessages.map((msg: Message) => {
-                                        const isOutbound = msg.direction === "OUTBOUND"
+                                        const isOutbound = msg.direction === "OUTBOUND";
+
+                                        // Extract Original Message Context for Interactive Replies
+                                        let replyContextText = "";
+                                        let replyContextSender = "Bot";
+                                        let targetContextId: string | undefined;
+
+                                        if (msg.replyContextId) {
+                                            // Manual outbound replies linked by backend
+                                            targetContextId = msg.replyContextId;
+                                        } else if (msg.rawMetadata) {
+                                            // Inbound webhook payload parsing
+                                            try {
+                                                const meta = JSON.parse(msg.rawMetadata);
+                                                targetContextId = meta?.context?.message_id || meta?.context?.id;
+                                            } catch (e) { }
+                                        }
+
+                                        if (targetContextId) {
+                                            const originalMsg = messages.find(m => m.waMessageId === targetContextId);
+                                            if (originalMsg) {
+                                                replyContextText = (originalMsg.messageText || "").replace(/ \[(?:Buttons|List): [\s\S]*?\]/, "");
+                                                // If original message was outbound, it was sent by us. Else, sent by them.
+                                                replyContextSender = originalMsg.direction === "OUTBOUND" ? "You" : (activeLead?.name || "Customer");
+                                            }
+                                        }
+
                                         return (
-                                            <div key={msg.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'} mb-1`}>
+                                            <div key={msg.id} id={`message-${msg.waMessageId}`} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'} mb-1 transition-colors duration-1000 rounded-lg`}>
                                                 <div
-                                                    className={`relative max-w-[75%] rounded-lg px-3 py-2 text-[15px] shadow-sm ${isOutbound
+                                                    className={`relative group max-w-[75%] rounded-lg px-3 py-2 text-[15px] shadow-sm ${isOutbound
                                                         ? 'bg-[#d9fdd3] text-slate-900 rounded-tr-none'
                                                         : 'bg-white text-slate-900 rounded-tl-none border border-slate-100'
                                                         }`}
@@ -419,6 +463,53 @@ export default function ChatDashboard() {
                                                 >
                                                     {/* Tail for chat bubble effect */}
                                                     <div className={`absolute top-0 w-3 h-3 ${isOutbound ? '-right-2 bg-[#d9fdd3]' : '-left-2 bg-white'} `} style={{ clipPath: isOutbound ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(100% 0, 0 0, 100% 100%)' }}></div>
+
+                                                    {/* Hover Action Menu */}
+                                                    <div className={`absolute top-0 ${isOutbound ? 'left-0 -ml-[72px] flex-row-reverse' : 'right-0 -mr-[72px]'} opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-1 py-1`}>
+                                                        <button
+                                                            onClick={() => setReplyingTo(msg)}
+                                                            className="text-slate-400 hover:text-slate-600 bg-white/90 border border-slate-200 shadow-sm rounded-full p-1.5"
+                                                            title="Reply"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+                                                        </button>
+                                                        {copiedMessageId === msg.id ? (
+                                                            <div className="flex items-center gap-1 bg-white/90 border border-slate-200 shadow-sm rounded-full px-2 py-1">
+                                                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                                                <span className="text-[10px] text-emerald-600 font-bold pr-0.5">Copied!</span>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleCopy(msg)}
+                                                                className="text-slate-400 hover:text-slate-600 bg-white/90 border border-slate-200 shadow-sm rounded-full p-1.5 transition-colors"
+                                                                title="Copy"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* WhatsApp Style Reply Context Box */}
+                                                    {replyContextText && (
+                                                        <div
+                                                            onClick={() => {
+                                                                if (targetContextId) {
+                                                                    const targetEl = document.getElementById(`message-${targetContextId}`);
+                                                                    if (targetEl) {
+                                                                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                        targetEl.classList.add('bg-indigo-100/70', 'scale-[1.01]');
+                                                                        setTimeout(() => {
+                                                                            targetEl.classList.remove('bg-indigo-100/70', 'scale-[1.01]');
+                                                                        }, 1500);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="bg-black/5 border-l-4 border-[#00a884] rounded p-2 mb-2 text-[13px] text-slate-600 line-clamp-3 cursor-pointer hover:bg-black/10 transition-colors"
+                                                        >
+                                                            <span className="font-semibold text-[#00a884] block text-[11px] mb-0.5">{replyContextSender}</span>
+                                                            <span className="whitespace-pre-line">{replyContextText}</span>
+                                                        </div>
+                                                    )}
 
                                                     <div className="whitespace-pre-wrap leading-snug pb-3">
                                                         {msg.type === 'image' && msg.mediaUrl && (
@@ -445,7 +536,83 @@ export default function ChatDashboard() {
                                                                 </a>
                                                             </div>
                                                         )}
-                                                        {msg.messageText}
+                                                        {msg.messageText === '[Image Message]' ? (
+                                                            <div className="flex items-center gap-1 text-slate-500 italic text-sm">
+                                                                <ImageIcon className="w-4 h-4" /> Photo
+                                                            </div>
+                                                        ) : msg.messageText === '[Video Message]' ? (
+                                                            <div className="flex items-center gap-1 text-slate-500 italic text-sm">
+                                                                <Video className="w-4 h-4" /> Video
+                                                            </div>
+                                                        ) : msg.messageText === '[Audio Message]' ? (
+                                                            <div className="flex items-center gap-1 text-slate-500 italic text-sm">
+                                                                <Music className="w-4 h-4" /> Audio
+                                                            </div>
+                                                        ) : msg.messageText === '[Document Message]' ? (
+                                                            <div className="flex items-center gap-1 text-slate-500 italic text-sm">
+                                                                <FileText className="w-4 h-4" /> Document
+                                                            </div>
+                                                        ) : (
+                                                            (() => {
+                                                                const text = msg.messageText || "";
+
+                                                                // Check for Buttons
+                                                                const btnMatch = text.match(/([\s\S]*?) \[Buttons: ([\s\S]*?)\]/);
+                                                                if (btnMatch) {
+                                                                    const mainText = btnMatch[1];
+                                                                    const buttons = btnMatch[2].split(',').map(b => b.trim());
+                                                                    return (
+                                                                        <div className="flex flex-col w-full">
+                                                                            <span className="mb-2 block whitespace-pre-wrap">{mainText}</span>
+                                                                            <div className="flex flex-col gap-1 border-t border-slate-200/50 pt-2 w-full mt-1">
+                                                                                {buttons.map((btn, idx) => (
+                                                                                    <div key={idx} className="text-center py-2 text-[#00a884] font-medium border-b border-slate-200/50 last:border-0 hover:bg-slate-50/50 cursor-pointer flex items-center justify-center gap-2">
+                                                                                        <span className="text-xl leading-none -mt-1 h-3 flex items-start">↰</span> {btn}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Check for List
+                                                                const listMatch = text.match(/([\s\S]*?) \[List: ([\s\S]*?)\]/);
+                                                                if (listMatch) {
+                                                                    const mainText = listMatch[1];
+                                                                    // We won't build a full interactive select modal since this is a history view for the agent,
+                                                                    // but we can render it to look like the WhatsApp list button and expand inline or just show.
+                                                                    const listItems = listMatch[2].split(',').map(b => b.trim());
+                                                                    return (
+                                                                        <div className="flex flex-col w-full">
+                                                                            <span className="mb-2 block whitespace-pre-wrap">{mainText}</span>
+                                                                            <div className="border-t border-slate-200/50 pt-2 w-full mt-1">
+                                                                                <button
+                                                                                    className="w-full text-center py-2 text-[#00a884] font-medium hover:bg-slate-50/50 flex items-center justify-center gap-2 rounded-b-md"
+                                                                                    onClick={(e) => {
+                                                                                        const target = e.currentTarget.nextElementSibling;
+                                                                                        if (target) target.classList.toggle('hidden');
+                                                                                    }}
+                                                                                >
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                                                                    View Options
+                                                                                </button>
+                                                                                <div className="hidden flex-col gap-1 mt-2 bg-slate-50/80 rounded-md p-2 border border-slate-100">
+                                                                                    <div className="text-xs text-slate-500 mb-1 px-2 font-medium">List Items:</div>
+                                                                                    {listItems.map((item, idx) => (
+                                                                                        <div key={idx} className="flex items-center gap-2 px-2 py-1.5 text-slate-700">
+                                                                                            <div className="w-3 h-3 rounded-full border border-slate-400"></div>
+                                                                                            <span className="text-sm">{item}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                return text;
+                                                            })()
+                                                        )}
                                                     </div>
 
                                                     <div className="absolute bottom-1 right-2 flex items-center gap-1 space-x-1">
@@ -456,7 +623,15 @@ export default function ChatDashboard() {
                                                                 : msg.status === 'DELIVERED'
                                                                     ? <CheckCheck className="w-[14px] h-[14px] text-slate-400" />
                                                                     : msg.status === 'FAILED'
-                                                                        ? <span className="text-[10px] text-rose-500 font-bold">!</span>
+                                                                        ? (
+                                                                            <button
+                                                                                onClick={() => handleSendMessage(undefined, msg.mediaUrl, msg.type, msg.messageText)}
+                                                                                className="flex items-center justify-center text-rose-500 hover:text-rose-700 hover:scale-110 transition-all ml-1"
+                                                                                title="Message failed to send. Click to retry."
+                                                                            >
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
+                                                                            </button>
+                                                                        )
                                                                         : <Check className="w-[14px] h-[14px] text-slate-400" />
                                                         )}
                                                     </div>
@@ -481,8 +656,26 @@ export default function ChatDashboard() {
                         )}
                     </div>
 
-                    <div className="p-3 bg-[#f0f2f5] border-t z-10 sticky bottom-0">
-                        <form onSubmit={(e) => handleSendMessage(e)} className="flex gap-2 max-w-4xl mx-auto relative group">
+                    <div className="p-3 bg-[#f0f2f5] border-t z-10 sticky bottom-0 flex flex-col gap-2">
+                        {replyingTo && (
+                            <div className="bg-slate-100 rounded-lg p-2 flex justify-between items-start border-l-4 border-[#00a884] shadow-sm ml-12 mr-14">
+                                <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="text-[#00a884] font-semibold text-xs mb-1">
+                                        {replyingTo.direction === 'OUTBOUND' ? 'You' : (activeLead?.name || 'Customer')}
+                                    </span>
+                                    <span className="text-slate-600 text-sm truncate">
+                                        {replyingTo.messageText || (replyingTo.type === 'image' ? 'Photo' : replyingTo.type === 'document' ? 'Document' : replyingTo.type === 'video' ? 'Video' : 'Message')}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={cancelReply}
+                                    className="text-slate-400 hover:text-slate-600 p-1 rounded-full transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                        <form onSubmit={(e) => handleSendMessage(e)} className="flex gap-2 max-w-4xl mx-auto relative group w-full">
                             <input
                                 type="file"
                                 ref={fileInputRef}

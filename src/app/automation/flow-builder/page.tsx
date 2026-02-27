@@ -11,12 +11,13 @@ import {
     Background,
     Connection,
     Edge,
-    Node
+    Node,
+    useReactFlow
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useAuth } from "@/components/AuthProvider";
-import { TriggerNode, MessageNode, ButtonsNode, ConditionNode, AgentNode, ListNode, ButtonEdge } from "./Nodes";
-import { ArrowLeft, Save, Plus, Play } from "lucide-react";
+import { TriggerNode, MessageNode, ButtonsNode, ConditionNode, AgentNode, ListNode, AskTextNode, ButtonEdge } from "./Nodes";
+import { ArrowLeft, Save, Plus, Play, MessageCircleQuestion } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const nodeTypes = {
@@ -25,7 +26,8 @@ const nodeTypes = {
     buttons: ButtonsNode,
     condition: ConditionNode,
     agent: AgentNode,
-    list: ListNode
+    list: ListNode,
+    askText: AskTextNode
 };
 
 const edgeTypes = {
@@ -47,6 +49,7 @@ function FlowBuilderContent() {
     const searchParams = useSearchParams();
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+    const { getNodes, getEdges } = useReactFlow();
 
     const defaultFlowName = searchParams.get("name") || "Welcome Flow";
     const [flowName, setFlowName] = useState(defaultFlowName);
@@ -99,15 +102,17 @@ function FlowBuilderContent() {
         if (!user?.email) return;
         setSaving(true);
         try {
-            const triggerNode = nodes.find(n => n.type === 'trigger');
+            const currentNodes = getNodes();
+            const currentEdges = getEdges();
+            const triggerNode = currentNodes.find(n => n.type === 'trigger');
             const keyword = triggerNode?.data?.keyword || "Hello";
 
             const payload = {
                 flowName,
                 triggerKeyword: keyword,
                 isActive: true,
-                nodesJson: JSON.stringify(nodes),
-                edgesJson: JSON.stringify(edges)
+                nodesJson: JSON.stringify(currentNodes),
+                edgesJson: JSON.stringify(currentEdges)
             };
 
             const res = await fetch(`http://localhost:8080/api/flows?email=${user.email}`, {
@@ -183,6 +188,16 @@ function FlowBuilderContent() {
                         </div>
                     </button>
 
+                    <button onClick={() => addNode('askText', { text: "Please type your answer below:" })} className="flex items-center gap-3 w-full p-3 rounded-xl border border-slate-200 hover:border-teal-400 hover:bg-teal-50 text-left transition-colors group">
+                        <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                            <Plus className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="font-semibold text-slate-900 text-sm">Ask Text</div>
+                            <div className="text-xs text-slate-500">Wait for user input</div>
+                        </div>
+                    </button>
+
                     <button onClick={() => addNode('condition', {})} className="flex items-center gap-3 w-full p-3 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 text-left transition-colors group">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
                             <Plus className="w-4 h-4" />
@@ -216,22 +231,20 @@ function FlowBuilderContent() {
 
                 {/* Canvas Area */}
                 <div className="flex-1 h-full w-full relative">
-                    <ReactFlowProvider>
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            nodeTypes={nodeTypes}
-                            edgeTypes={edgeTypes}
-                            fitView
-                            className="bg-slate-50"
-                        >
-                            <Background color="#cbd5e1" gap={16} />
-                            <Controls className="bg-white border-slate-200 shadow-sm rounded-lg" />
-                        </ReactFlow>
-                    </ReactFlowProvider>
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes}
+                        fitView
+                        className="bg-slate-50"
+                    >
+                        <Background color="#cbd5e1" gap={16} />
+                        <Controls className="bg-white border-slate-200 shadow-sm rounded-lg" />
+                    </ReactFlow>
                 </div>
             </div>
         </div>
@@ -241,7 +254,9 @@ function FlowBuilderContent() {
 export default function FlowBuilderPage() {
     return (
         <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading editor...</div>}>
-            <FlowBuilderContent />
+            <ReactFlowProvider>
+                <FlowBuilderContent />
+            </ReactFlowProvider>
         </Suspense>
     );
 }
